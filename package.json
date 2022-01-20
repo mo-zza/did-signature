@@ -4,7 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
+    "@mattrglobal/node-bbs-signatures": "^0.13.0",
     "@types/eslint": "^8",
+    "@types/jest": "^27.4.0",
     "@types/node": "^17.0.10",
     "@types/prettier": "^2",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
