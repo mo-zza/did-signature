@@ -19,11 +19,11 @@ module.exports = {
         "^.+\\.(t|j)s$": "ts-jest",
     },
     coverageDirectory: "./coverage",
-    moduleNameMapper: pathsToModuleNameMapper(paths, {
-        prefix: "<rootDir>/",
-    }),
+    // moduleNameMapper: pathsToModuleNameMapper(paths, {
+    //     prefix: "<rootDir>/",
+    // }),
     clearMocks: true,
     maxWorkers: 1,
-    setupFiles: ["<rootDir>/.env"],
+    // setupFiles: ["<rootDir>/.env"],
     // setupFiles: ["<rootDir>/env.js"],
 };
