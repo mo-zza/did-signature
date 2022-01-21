@@ -1,3 +1,11 @@
+import {
+    blsCreateProof,
+    blsSign,
+    blsVerify,
+    blsVerifyProof,
+    generateBls12381G2KeyPair,
+} from '@mattrglobal/bbs-signatures';
+
 describe('create vp test', () => {
     // const testData = {
     //     id: 'did:example:489398593#test',
@@ -6,29 +14,85 @@ describe('create vp test', () => {
     //     publicKeyBase58:
     //         'oqpWYKaZD9M1Kbe94BVXpr8WTdFBNZyKv48cziTiQUeuhm7sBhCABMyYG4kcMrseC68YTFFgyhiNeBKjzdKk9MiRWuLv5H4FFujQsQK2KTAtzU8qTBiZqBHMmnLF4PL7Ytu',
     // };
+    const messageExample_1 = 'message1';
+    const messageExample_2 = 'message2';
 
-    const mockKeyPair = {
-        secretKey: [
-            42, 39, 136, 73, 155, 226, 55, 131, 121, 137, 42, 169, 47, 181, 177,
-            17, 54, 119, 21, 204, 130, 146, 0, 161, 207, 215, 88, 53, 245, 86,
-            73, 101,
-        ],
-        publicKey: [
-            139, 157, 165, 3, 31, 191, 225, 197, 87, 167, 167, 132, 24, 87, 36,
-            61, 50, 132, 80, 87, 82, 29, 100, 71, 202, 45, 189, 18, 133, 209,
-            198, 100, 166, 192, 50, 144, 178, 40, 201, 128, 173, 51, 30, 194,
-            192, 81, 242, 65, 18, 234, 53, 108, 198, 33, 132, 187, 18, 130, 209,
-            250, 199, 180, 21, 15, 146, 164, 89, 131, 240, 144, 55, 49, 17, 123,
-            19, 197, 0, 218, 220, 103, 36, 109, 105, 121, 227, 230, 115, 178,
-            83, 34, 97, 178, 77, 89, 22, 175,
-        ],
-    };
-    test('should Buffer 2 key pair', async () => {
-        jest.mock('@mattrglobal/bbs-signatures', () => ({
-            generateBls12381G2KeyPair: () => mockKeyPair,
-        }));
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const signaure = require('@mattrglobal/bbs-signatures');
-        expect(await signaure.generateBls12381G2KeyPair()).toEqual(mockKeyPair);
+    const testMessageResult = [
+        Uint8Array.from(Buffer.from(messageExample_1, 'utf-8')),
+        Uint8Array.from(Buffer.from(messageExample_2, 'utf-8')),
+    ];
+
+    test('should be object', async () => {
+        const keyPair = await generateBls12381G2KeyPair();
+        expect(typeof keyPair).toBe('object');
+    });
+
+    test('should be uint 8 array', () => {
+        const message = [
+            Uint8Array.from(Buffer.from(messageExample_1, 'utf-8')),
+            Uint8Array.from(Buffer.from(messageExample_2, 'utf-8')),
+        ];
+        expect(message).toStrictEqual(testMessageResult);
+    });
+
+    test('should type Uint8Array(112)', async () => {
+        const keyPair = await generateBls12381G2KeyPair();
+        const message = [
+            Uint8Array.from(Buffer.from(messageExample_1, 'utf-8')),
+            Uint8Array.from(Buffer.from(messageExample_2, 'utf-8')),
+        ];
+        const sign = await blsSign({
+            keyPair,
+            messages: message,
+        });
+    });
+
+    test('should be verified', async () => {
+        const keyPair = await generateBls12381G2KeyPair();
+        const message = [
+            Uint8Array.from(Buffer.from(messageExample_1, 'utf-8')),
+            Uint8Array.from(Buffer.from(messageExample_2, 'utf-8')),
+        ];
+        const signature = await blsSign({
+            keyPair,
+            messages: message,
+        });
+        const isVerified = await blsVerify({
+            publicKey: keyPair.publicKey,
+            messages: message,
+            signature,
+        });
+        const shouldResult = { verified: true, error: undefined };
+        expect(isVerified).toEqual(shouldResult);
+    });
+
+    test('should be proof', async () => {
+        const keyPair = await generateBls12381G2KeyPair();
+        const messages = [
+            Uint8Array.from(Buffer.from(messageExample_1, 'utf-8')),
+            Uint8Array.from(Buffer.from(messageExample_2, 'utf-8')),
+        ];
+        const signature = await blsSign({
+            keyPair,
+            messages: messages,
+        });
+        const proof = await blsCreateProof({
+            signature,
+            publicKey: keyPair.publicKey,
+            messages,
+            nonce: Uint8Array.from(Buffer.from('nonce', 'utf8')),
+            revealed: [0],
+        });
+        console.log(proof);
+
+        const isProofVerified = await blsVerifyProof({
+            proof,
+            publicKey: keyPair.publicKey,
+            messages: messages.slice(0, 1),
+            nonce: Uint8Array.from(Buffer.from('nonce', 'utf8')),
+        });
+        console.log(isProofVerified);
+        const sholudResult = { verified: true, error: undefined };
+        expect(isProofVerified).toEqual(sholudResult);
     });
 });
